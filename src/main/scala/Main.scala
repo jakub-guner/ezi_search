@@ -1,5 +1,6 @@
 import scala.collection.immutable.Range.Inclusive
 import scala.io.{Source, StdIn}
+import TFIDF._
 
 /**
  * Created by JG on 20/10/16.
@@ -12,6 +13,8 @@ object Main extends App{
   val stemmedKeywords=keywordsFile.map(stem).distinct
   val bagOfWordsProcessor=bagOfWords(stemmedKeywords)_
 
+  case class Document(title:String, content:List[String], stemmed:List[String] = List.empty[String])
+
   val documents=parseDocuments(documentsFile)
 
   val tf=documents
@@ -19,9 +22,9 @@ object Main extends App{
     .map(bagOfWordsProcessor)
     .map(toTF)
 
-  val idf=forEachKeyword
-    .map(countOccurences)
-    .map(calculateIDF)
+  val idf=forEachKeywordIn(stemmedKeywords)
+    .map(countOccurences(tf)(_))
+    .map(calculateIDF(tf)(_))
 
   val documentsTFIDF=tf
     .map(list => list.zip(idf))
@@ -55,62 +58,13 @@ object Main extends App{
       .zip(documents)
       .filter({case(sim, doc)=>sim!=0})
       .map({case(sim, doc)=>(sim, doc.title)})
-//      .foreach(println)
-
-//    Nil
   }
-  
-  def cosineSimilarity(query:List[Double])(document:List[Double]):Double = {
-    def vectorLength(query: List[Double]): Double = {
-      Math.sqrt(query.map(Math.pow(_, 2)).sum)
-    }
-    
-    val dotProduct=query.zip(document).map { case (tfValue: Double, idfValue: Double) => tfValue * idfValue }.sum
-    val denominator=vectorLength(query)*vectorLength(document)
-    if (denominator!=0 && !denominator.isNaN) dotProduct/denominator else 0
-
-  }
-
-
-
-
-  def bagOfWordsList(keywords:List[String])(document: List[String]):List[Int] = {
-    keywords.map(keyword=>document.count(word=> word==keyword))
-  }
-
-  def forEachKeyword: Inclusive = {
-    (0 to stemmedKeywords.size - 1)
-  }
-
-  def calculateIDF: (Int) => Double = {
-    noOfDocs => Math.log(tf.size.toDouble / noOfDocs)
-  }
-
-  def countOccurences: (Int) => Int = {
-    index => tf.count(list => list(index) != 0.0)
-  }
-
-  case class Document(title:String, content:List[String], stemmed:List[String] = List.empty[String])
-
-  def toTF(bag:List[Int]):List[Double] = {
-    val max=bag.max.toDouble
-    bag.map(_.toDouble).map(_/max)
-  }
-
-  def stem(document: Document):Document = {
-    def stemLine(line:String):List[String]={
-      line.toLowerCase.split(" ").map(stem).toList
-    }
-    val stemmedDocument:List[String] = stemLine(document.title) ::: document.content.map(stemLine).flatten ::: Nil
-    document.copy(stemmed = stemmedDocument)
-  }
-
-  def bagOfWords(keywords:List[String])(document: Document):List[Int] = {
-    keywords.map(keyword=>document.stemmed.count(word=> word==keyword))
-  }
-
 
   def parseDocuments(documents:List[String]):List[Document]={
+    def removeFirstLine(others: List[String]): List[String] = {
+      others.drop(1)
+    }
+
     if(documents.nonEmpty){
       val (firstDocument, otherDocuments) = documents.span(_.nonEmpty)
       val (titleList, contentList) = firstDocument.splitAt(1)
@@ -122,23 +76,6 @@ object Main extends App{
   }
 
 
-  def removeFirstLine(others: List[String]): List[String] = {
-    others.drop(1)
-  }
-
-  def stem(word: String) : String = {
-    val stemmer = new Stemmer()
-    stemmer.add(word.trim)
-    if (stemmer.b.length > 2) {
-      stemmer.step1()
-      stemmer.step2()
-      stemmer.step3()
-      stemmer.step4()
-      stemmer.step5a()
-      stemmer.step5b()
-    }
-    stemmer.b
-  }
 
 
 
