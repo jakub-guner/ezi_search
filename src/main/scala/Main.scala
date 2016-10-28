@@ -31,15 +31,29 @@ object Main extends App{
     .map(list => list.map{case (tfValue:Double, idfValue:Double) => tfValue*idfValue})
 
   while(true){
-    querySerchEngine()
+    querySearchEngine()
   }
 
-  def querySerchEngine(): Unit = {
+  def querySearchEngine(): Unit = {
     println("Please enter your query and press ENTER:")
-    val query=StdIn.readLine
+    val query=getExpandedQuery
     findResults(query).foreach(println)
   }
 
+
+  def getExpandedQuery: String = {
+    val originalQuery=StdIn.readLine
+    val expansions=WordNet.synonyms(originalQuery)
+    println("Please select the expansion")
+
+    expansions.zipWithIndex.foreach{
+      case(expansion, index) => println(index +": "+ expansion.mkString(" "))
+    }
+    println("Type expansion index")
+
+    val selectedIndex=StdIn.readInt()
+    expansions(selectedIndex).mkString(" ")
+  }
 
   def findResults(query: String): List[(Double, String)] = {
     def getQueryTFIDF: List[Double] = {
