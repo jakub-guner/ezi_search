@@ -31,28 +31,57 @@ object Main extends App{
     .map(list => list.map{case (tfValue:Double, idfValue:Double) => tfValue*idfValue})
 
   while(true){
-    querySearchEngine()
+    try{
+      querySearchEngine()
+    }catch{
+      case e:Exception => println("Error occured. Try something different")
+    }
   }
 
   def querySearchEngine(): Unit = {
     println("Please enter your query and press ENTER:")
-    val query=getExpandedQuery
+    val query=getQueryFromUser
     findResults(query).foreach(println)
   }
 
 
-  def getExpandedQuery: String = {
+  def getQueryFromUser: String = {
     val originalQuery=StdIn.readLine
-    val expansions=WordNet.synonyms(originalQuery)
-    println("Please select the expansion")
+    println("Do you wish do expand your query y/n:")
+    if(StdIn.readLine()=="y"){
+      getExpandedQuery(originalQuery)
+    }else{
+      println("Using original query...")
+      originalQuery
+    }
+  }
 
-    expansions.zipWithIndex.foreach{
+  def getExpandedQuery(originalQuery: String): String = {
+    val expandedQuery =
+      originalQuery
+        .split(" ")
+        .map(expandSingleWord)
+        .mkString(" ")
+
+    val finalQuery = originalQuery + " " + expandedQuery
+    println(s"Searching for '$finalQuery'")
+    finalQuery
+  }
+
+  def expandSingleWord(word:String):String={
+    println(s"Please select the expansion for '$word'")
+    val expansions=WordNet.synonyms(word)
+
+    expansions
+      .zipWithIndex
+      .foreach{
       case(expansion, index) => println(index +": "+ expansion.mkString(" "))
     }
-    println("Type expansion index")
+    println("Type index of expansion")
 
     val selectedIndex=StdIn.readInt()
     expansions(selectedIndex).mkString(" ")
+
   }
 
   def findResults(query: String): List[(Double, String)] = {

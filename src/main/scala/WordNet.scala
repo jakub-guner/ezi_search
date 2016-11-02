@@ -21,12 +21,14 @@ object WordNet {
       indexedWord.getWordIDs.asScala.toList
     }
     def getListOfSynonyms(sense: IWordID): List[String] = {
-      dict.getWord(sense).getSynset.getWords.asScala.toList.map(_.getLemma)
+      dict.getWord(sense).getSynset.getWords.asScala.toList.map(_.getLemma).filter(_ != word)
     }
 
-    for{
+    val synonyms=for{
       sense:IWordID <- getAllSensesOfTheWord
     } yield getListOfSynonyms(sense)
+
+    synonyms.filter(_.nonEmpty)
   }
 
 }
