@@ -39,7 +39,7 @@ object TFIDF {
 
   def toTF(bag:List[Int]):List[Double] = {
     val max=bag.max.toDouble
-    bag.map(_.toDouble).map(_/max)
+    bag.map(_.toDouble/max)
   }
 
   def forEachKeywordIn(stemmedKeywords:List[String]): Inclusive = {

@@ -40,19 +40,22 @@ object Main extends App{
 
   def querySearchEngine(): Unit = {
     println("Please enter your query and press ENTER:")
-    val query=getQueryFromUser
-    findResults(query).foreach(println)
+    val (query, originalSize, weight)=getQueryFromUser
+    findResults(query, originalSize, weight).foreach(println)
   }
 
 
-  def getQueryFromUser: String = {
+  def getQueryFromUser: (String, Int, Double) = {
     val originalQuery=StdIn.readLine
+    val originalQuerySize=originalQuery.split(" ").size
     println("Do you wish do expand your query y/n:")
     if(StdIn.readLine()=="y"){
-      getExpandedQuery(originalQuery)
+      println("Enter the weight for expansion terms [0, 1]")
+      val weight=StdIn.readDouble()
+      (getExpandedQuery(originalQuery),originalQuerySize, weight)
     }else{
       println("Using original query...")
-      originalQuery
+      (originalQuery,originalQuerySize, 0)
     }
   }
 
@@ -85,11 +88,18 @@ object Main extends App{
   }
 
   def findResults(query: String): List[(Double, String)] = {
+    findResults(query, query.split(" ").size, 0.0)
+  }
+
+  def findResults(query: String, originalQueryLength:Int, weight:Double): List[(Double, String)] = {
     def getQueryTFIDF: List[Double] = {
       val bagOfWordsLst = bagOfWordsList(stemmedKeywords) _
       val stemmedQuery = query.toLowerCase.split(" ").map(stem)
+      val expansion=stemmedQuery.drop(originalQueryLength)
       val bag: List[Int] = stemmedKeywords.map(keyword => stemmedQuery.count(word => word == keyword))
-      val tf = toTF(bag)
+      val tf = toTF(bag).zipWithIndex.map{
+        case (tf, index)=> if(expansion.contains(stemmedKeywords(index))) tf*weight else tf
+      }
       val query_tf_idf = tf.zip(idf).map { case (tfValue: Double, idfValue: Double) => tfValue * idfValue }
       query_tf_idf
     }
@@ -101,6 +111,7 @@ object Main extends App{
       .zip(documents)
       .filter({case(sim, doc)=>sim!=0})
       .map({case(sim, doc)=>(sim, doc.title)})
+
   }
 
   def parseDocuments(documents:List[String]):List[Document]={
