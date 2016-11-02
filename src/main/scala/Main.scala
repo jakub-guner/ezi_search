@@ -77,10 +77,11 @@ object Main extends App{
       .foreach{
       case(expansion, index) => println(index +": "+ expansion.mkString(" "))
     }
-    println("Type index of expansion")
+    println("Type index of expansion or -1 for empty one")
 
     val selectedIndex=StdIn.readInt()
-    expansions(selectedIndex).mkString(" ")
+    if(selectedIndex < 0) ""
+    else expansions(selectedIndex).mkString(" ")
 
   }
 
