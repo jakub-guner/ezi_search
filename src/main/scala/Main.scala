@@ -1,6 +1,7 @@
 import scala.collection.immutable.Range.Inclusive
 import scala.io.{Source, StdIn}
 import TFIDF._
+import main.scala.KMEANS._
 
 /**
  * Created by JG on 20/10/16.
@@ -29,6 +30,12 @@ object Main extends App{
   val documentsTFIDF=tf
     .map(list => list.zip(idf))
     .map(list => list.map{case (tfValue:Double, idfValue:Double) => tfValue*idfValue})
+
+  val assignment = computeClusters(documentsTFIDF)
+  println("Assignments: " + assignment.size)
+  for(i <- 0 to assignment.size-1){
+    println(documents(i).title + " " + assignment(i))
+  }
 
   while(true){
     try{

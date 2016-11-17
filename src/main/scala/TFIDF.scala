@@ -51,7 +51,7 @@ object TFIDF {
   }
 
   def calculateIDF(tfMatrix:List[List[Double]])(noOfDocs:Int): Double = {
-    Math.log(tfMatrix.size.toDouble / noOfDocs)
+    if (noOfDocs == 0) 0 else Math.log(tfMatrix.size.toDouble / noOfDocs)
   }
 
   def cosineSimilarity(query:List[Double])(document:List[Double]):Double = {
